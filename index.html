@@ -412,6 +412,7 @@
         </label>
       </div>
       <div class="field-error dept-error" id="deptErr">Selectați departamentul.</div>
+      <div id="prefillHint" style="display:none;margin-top:10px;padding:10px 14px;background:#fff8e1;border-left:3px solid #f0a500;border-radius:0 6px 6px 0;font-size:13px;color:#7a5500;line-height:1.5"></div>
 
       <div class="row-2">
         <div class="fg" id="nameFg">
@@ -481,10 +482,13 @@ function fmtDate(s) {
   return `${parseInt(d)} ${mo[parseInt(m)-1]} ${y}`;
 }
 
+let serverData = {};
+
 async function loadTodayStatus() {
   try {
     const res = await fetch(APPS_SCRIPT_URL);
     const data = await res.json();
+    serverData = data;
     const keys = Object.keys(data);
     const box = document.getElementById('deptStatus');
     const txt = document.getElementById('statusText');
@@ -513,13 +517,25 @@ function saveCurrentFields() {
 }
 
 function loadFields(dept) {
-  const d = deptData[dept] || {};
-  document.getElementById('pname').value  = d.name   || '';
-  document.getElementById('done').value   = d.done   || '';
-  document.getElementById('inprog').value = d.inprog || '';
+  const local = deptData[dept];
+  const srv   = serverData[dept];
+  document.getElementById('pname').value  = (local && local.name)   || (srv && srv.name)       || '';
+  document.getElementById('done').value   = (local && local.done)   || (srv && srv.tasks_done) || '';
+  document.getElementById('inprog').value = (local && local.inprog) || (srv && srv.blocaje)    || '';
   document.getElementById('nameFg').classList.remove('err');
   document.getElementById('doneFg').classList.remove('err');
   document.getElementById('deptErr').classList.remove('show');
+
+  if (srv && !local) {
+    const hint = document.getElementById('prefillHint');
+    if (hint) {
+      hint.textContent = `⚠️ Există deja un raport pentru acest departament (salvat la ${srv.saved_at}). Îl poți modifica și salva din nou.`;
+      hint.style.display = 'block';
+    }
+  } else {
+    const hint = document.getElementById('prefillHint');
+    if (hint) hint.style.display = 'none';
+  }
 }
 
 document.querySelectorAll('input[name="dept"]').forEach(radio => {
