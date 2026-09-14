@@ -563,7 +563,7 @@ document.getElementById('form').addEventListener('submit', async e => {
   });
 
   try {
-    await fetch(APPS_SCRIPT_URL, { method: 'POST', body: params });
+    await fetch(APPS_SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
 
     document.getElementById('successMsg').innerHTML =
       `Raportul <strong>${DEPT_LABELS[dept] || dept}</strong> pentru <strong>${fmtDate(dstr)}</strong> a fost salvat. La 19:00 se trimite automat email-ul combinat.`;
