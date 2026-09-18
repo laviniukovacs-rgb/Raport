@@ -1,613 +1,181 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Raport Zilnic PRIMA</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap">
-  <style>
-    :root {
-      --bg:            #F0EDE8;
-      --surface:       #FFFFFF;
-      --navy:          #1B3A5C;
-      --navy-hover:    #224A74;
-      --amber:         #BF8530;
-      --amber-soft:    #F8EFD8;
-      --text:          #18181A;
-      --muted:         #676767;
-      --border:        #DBD6CF;
-      --input-bg:      #FAFAF8;
-      --shadow:        0 1px 4px rgba(27,58,92,0.09), 0 4px 16px rgba(27,58,92,0.04);
-      --radius:        10px;
-      --focus-ring:    0 0 0 3px rgba(27,58,92,0.15);
-      --ok-bg:         #EBF6F0;
-      --ok-text:       #1A6646;
-      --warn-bg:       #FEF7E5;
-      --warn-text:     #8C6010;
-      --err-color:     #C03030;
-    }
+// ============================================================
+// PRIMA Development Group — Rapoarte Zilnice
+// Google Apps Script Web App
+// ============================================================
 
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --bg:        #10181F;
-        --surface:   #182130;
-        --navy:      #4E8EC8;
-        --navy-hover:#6AA3D8;
-        --amber:     #C8983C;
-        --amber-soft:#22200A;
-        --text:      #E4DDD4;
-        --muted:     #888888;
-        --border:    #263548;
-        --input-bg:  #0E1620;
-        --shadow:    0 1px 4px rgba(0,0,0,0.4);
-        --focus-ring:0 0 0 3px rgba(78,142,200,0.2);
-        --ok-bg:     #0D2A1A;
-        --ok-text:   #4EC882;
-        --warn-bg:   #1E1A07;
-        --warn-text: #C8983C;
-      }
-    }
+var OWNER_EMAIL = 'laviniu.kovacs@primaoradea.ro,madalin.rugeanu@primadevelopment.ro';
+var SHEET_NAME  = 'Rapoarte';
 
-    :root[data-theme="dark"] {
-      --bg:        #10181F;
-      --surface:   #182130;
-      --navy:      #4E8EC8;
-      --navy-hover:#6AA3D8;
-      --amber:     #C8983C;
-      --amber-soft:#22200A;
-      --text:      #E4DDD4;
-      --muted:     #888888;
-      --border:    #263548;
-      --input-bg:  #0E1620;
-      --shadow:    0 1px 4px rgba(0,0,0,0.4);
-      --focus-ring:0 0 0 3px rgba(78,142,200,0.2);
-      --ok-bg:     #0D2A1A;
-      --ok-text:   #4EC882;
-      --warn-bg:   #1E1A07;
-      --warn-text: #C8983C;
-    }
+// ---------- Web App ----------
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding-inline: 20px;
-      padding-block: 40px 64px;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .wrap {
-      max-width: 640px;
-      margin-inline: auto;
-    }
-
-    /* ─── HEADER ─── */
-    .header { margin-bottom: 32px; }
-
-    .prima-logo { display: flex; align-items: baseline; gap: 0; }
-
-    .prima-mark {
-      font-family: 'DM Serif Display', Georgia, serif;
-      font-size: 26px;
-      color: var(--navy);
-      letter-spacing: 0.04em;
-      line-height: 1;
-    }
-
-    .prima-dot {
-      font-family: 'DM Serif Display', Georgia, serif;
-      font-size: 26px;
-      color: var(--amber);
-      font-style: italic;
-    }
-
-    .prima-tagline {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
-    .header-rule {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 16px;
-      margin-bottom: 8px;
-    }
-
-    .rule-amber { width: 32px; height: 2px; background: var(--amber); flex-shrink: 0; }
-
-    .page-title {
-      font-family: 'DM Serif Display', Georgia, serif;
-      font-size: 20px;
-      color: var(--navy);
-      text-wrap: balance;
-    }
-
-    /* ─── CARD ─── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 32px;
-    }
-
-    /* ─── DEPT SELECTOR ─── */
-    .section-label {
-      display: block;
-      font-size: 10.5px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .dept-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 28px;
-    }
-
-    .dept-opt { position: relative; cursor: pointer; }
-
-    .dept-opt input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0; height: 0;
-    }
-
-    .dept-tile {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 14px 8px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      background: var(--input-bg);
-      cursor: pointer;
-      transition: border-color 0.14s, background 0.14s, color 0.14s;
-      user-select: none;
-    }
-
-    .dept-tile:hover { border-color: var(--navy); }
-    .dept-icon { font-size: 22px; line-height: 1; }
-
-    .dept-name {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--text);
-      letter-spacing: 0.01em;
-      transition: color 0.14s;
-    }
-
-    .dept-opt input:checked + .dept-tile {
-      border-color: var(--navy);
-      background: var(--navy);
-    }
-
-    .dept-opt input:checked + .dept-tile .dept-name { color: #fff; }
-    .dept-opt input:focus-visible + .dept-tile { outline: 2px solid var(--navy); outline-offset: 2px; }
-
-    .field-error { font-size: 12px; color: var(--err-color); margin-top: 5px; display: none; }
-    .dept-error.show { display: block; }
-
-    /* ─── FORM ROW ─── */
-    .row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    /* ─── FIELD GROUP ─── */
-    .fg {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      margin-bottom: 20px;
-    }
-
-    .fg:last-child { margin-bottom: 0; }
-
-    .fg label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .fg input[type="text"],
-    .fg input[type="date"],
-    .fg textarea {
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      color: var(--text);
-      background: var(--input-bg);
-      border: 1.5px solid var(--border);
-      border-radius: 7px;
-      padding: 9px 12px;
-      outline: none;
-      transition: border-color 0.14s, box-shadow 0.14s;
-      width: 100%;
-      appearance: none;
-    }
-
-    .fg textarea {
-      resize: vertical;
-      min-height: 88px;
-      line-height: 1.55;
-    }
-
-    .fg input:focus, .fg textarea:focus {
-      border-color: var(--navy);
-      box-shadow: var(--focus-ring);
-    }
-
-    .fg.err input, .fg.err textarea { border-color: var(--err-color); }
-    .fg.err .field-error { display: block; }
-
-    /* ─── DIVIDER ─── */
-    .divider { height: 1px; background: var(--border); margin-block: 24px; }
-
-    /* ─── OPTIONAL BADGE ─── */
-    .opt-badge {
-      font-size: 10.5px;
-      font-weight: 500;
-      color: var(--muted);
-      padding: 1px 6px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      margin-left: 2px;
-    }
-
-    /* ─── SUBMIT ─── */
-    .btn-submit {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 13px 24px;
-      margin-top: 28px;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      background: var(--navy);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      letter-spacing: 0.01em;
-      transition: background 0.14s, transform 0.1s;
-    }
-
-    .btn-submit:hover:not(:disabled) { background: var(--navy-hover); }
-    .btn-submit:active:not(:disabled) { transform: scale(0.99); }
-    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; }
-
-    /* ─── SUCCESS ─── */
-    .success {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 48px 16px;
-      gap: 14px;
-    }
-
-    .success.show { display: flex; }
-
-    .success-ring {
-      width: 62px; height: 62px;
-      border-radius: 50%;
-      background: var(--ok-bg);
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    .success-ring svg { width: 26px; height: 26px; stroke: var(--ok-text); }
-
-    .success-h {
-      font-family: 'DM Serif Display', Georgia, serif;
-      font-size: 22px;
-      color: var(--navy);
-    }
-
-    .success-p {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.6;
-      max-width: 340px;
-    }
-
-    .btn-reset {
-      margin-top: 4px;
-      padding: 9px 22px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      background: none;
-      border: 1.5px solid var(--border);
-      border-radius: 7px;
-      cursor: pointer;
-      font-family: 'Inter', sans-serif;
-      transition: border-color 0.14s;
-    }
-
-    .btn-reset:hover { border-color: var(--navy); }
-
-    /* ─── FOOTER ─── */
-    .footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 480px) {
-      body { padding-inline: 16px; padding-block: 24px 48px; }
-      .card { padding: 24px 18px; }
-      .row-2 { grid-template-columns: 1fr; gap: 0; }
-      .dept-tile { padding: 12px 6px; }
-      .dept-name { font-size: 10.5px; }
-    }
-  </style>
-</head>
-<body>
-
-<div class="wrap">
-  <header class="header">
-    <div class="prima-logo">
-      <span class="prima-mark">PRIMA</span><span class="prima-dot">.</span>
-    </div>
-    <div class="prima-tagline">Development Group</div>
-    <div class="header-rule">
-      <div class="rule-amber"></div>
-      <div class="page-title">Raport Zilnic Intern</div>
-    </div>
-  </header>
-
-  <div class="card">
-    <!-- Status departamente azi -->
-    <div id="deptStatus" style="display:none;background:#f0f7f4;border:1px solid #c0dcc8;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1a4a2e">
-      <strong>Status azi:</strong> <span id="statusText">Se încarcă…</span>
-    </div>
-
-    <!-- Form -->
-    <form id="form" novalidate>
-
-      <label class="section-label">Departament</label>
-      <div class="dept-grid">
-        <label class="dept-opt">
-          <input type="radio" name="dept" value="Tehnic" required>
-          <div class="dept-tile">
-            <span class="dept-icon">🏗️</span>
-            <span class="dept-name">Tehnic</span>
-          </div>
-        </label>
-        <label class="dept-opt">
-          <input type="radio" name="dept" value="Operational">
-          <div class="dept-tile">
-            <span class="dept-icon">⚙️</span>
-            <span class="dept-name">Operațional</span>
-          </div>
-        </label>
-        <label class="dept-opt">
-          <input type="radio" name="dept" value="Contabilitate">
-          <div class="dept-tile">
-            <span class="dept-icon">📊</span>
-            <span class="dept-name">Contabilitate</span>
-          </div>
-        </label>
-      </div>
-      <div class="field-error dept-error" id="deptErr">Selectați departamentul.</div>
-      <div id="prefillHint" style="display:none;margin-top:10px;padding:10px 14px;background:#fff8e1;border-left:3px solid #f0a500;border-radius:0 6px 6px 0;font-size:13px;color:#7a5500;line-height:1.5"></div>
-
-      <div class="row-2">
-        <div class="fg" id="nameFg">
-          <label for="pname">Nume și prenume</label>
-          <input type="text" id="pname" name="name" placeholder="Ion Popescu" autocomplete="name">
-          <span class="field-error">Câmp obligatoriu.</span>
-        </div>
-        <div class="fg">
-          <label for="rdate">Data raportului</label>
-          <input type="date" id="rdate" name="date">
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="fg" id="doneFg">
-        <label for="done">Ce am realizat azi</label>
-        <textarea id="done" name="done" rows="5" placeholder="Descrieți pe scurt activitățile finalizate sau avansate astăzi…"></textarea>
-        <span class="field-error">Câmp obligatoriu.</span>
-      </div>
-
-      <div class="fg">
-        <label>
-          Blocaje / Ce am nevoie
-          <span class="opt-badge">opțional</span>
-        </label>
-        <textarea id="inprog" name="inprog" rows="3" placeholder="Ce nu merge sau ce aveți nevoie de la conducere…"></textarea>
-      </div>
-
-      <button type="submit" class="btn-submit" id="submitBtn">
-        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-        Salvează raportul
-      </button>
-    </form>
-
-    <!-- Success -->
-    <div class="success" id="successPane">
-      <div class="success-ring">
-        <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-        </svg>
-      </div>
-      <div class="success-h">Raport salvat!</div>
-      <p class="success-p" id="successMsg"></p>
-      <button class="btn-reset" onclick="resetForm()">Completează alt departament</button>
-    </div>
-  </div>
-
-  <div class="footer">PRIMA Development Group &mdash; uz intern</div>
-</div>
-
-<script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz61Xh38zgYS0D_X4E0127G9iG-uYu8WjwdepogIUMjxZ0XihWk-vMXkQProkNTMZve/exec';
-
-const DEPT_LABELS = { Tehnic: '🏗️ Tehnic', Operational: '⚙️ Operațional', Contabilitate: '📊 Contabilitate' };
-
-const today = new Date();
-const pad = n => String(n).padStart(2, '0');
-document.getElementById('rdate').value =
-  `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-
-function fmtDate(s) {
-  const [y,m,d] = s.split('-');
-  const mo = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
-  return `${parseInt(d)} ${mo[parseInt(m)-1]} ${y}`;
-}
-
-let serverData = {};
-
-async function loadTodayStatus() {
+function doPost(e) {
   try {
-    const res = await fetch(APPS_SCRIPT_URL);
-    const data = await res.json();
-    serverData = data;
-    const keys = Object.keys(data);
-    const box = document.getElementById('deptStatus');
-    const txt = document.getElementById('statusText');
-    if (keys.length === 0) {
-      txt.textContent = 'Niciun departament nu a completat încă.';
-    } else {
-      const done = keys.map(k => `<strong>${DEPT_LABELS[k] || k}</strong> ✅`);
-      const missing = Object.keys(DEPT_LABELS).filter(k => !data[k]).map(k => DEPT_LABELS[k]);
-      txt.innerHTML = done.join(' · ') + (missing.length ? ` &nbsp;|&nbsp; Lipsă: ${missing.join(', ')}` : ' — <em>toate completate!</em>');
-    }
-    box.style.display = 'block';
-  } catch(e) { /* silențios */ }
-}
-loadTodayStatus();
-
-const deptData = {};
-let prevDept = null;
-
-function saveCurrentFields() {
-  if (!prevDept) return;
-  deptData[prevDept] = {
-    name:   document.getElementById('pname').value,
-    done:   document.getElementById('done').value,
-    inprog: document.getElementById('inprog').value,
-  };
-}
-
-function loadFields(dept) {
-  const local = deptData[dept];
-  const srv   = serverData[dept];
-  document.getElementById('pname').value  = (local && local.name)   || (srv && srv.name)       || '';
-  document.getElementById('done').value   = (local && local.done)   || (srv && srv.tasks_done) || '';
-  document.getElementById('inprog').value = (local && local.inprog) || (srv && srv.blocaje)    || '';
-  document.getElementById('nameFg').classList.remove('err');
-  document.getElementById('doneFg').classList.remove('err');
-  document.getElementById('deptErr').classList.remove('show');
-
-  if (srv && !local) {
-    const hint = document.getElementById('prefillHint');
-    if (hint) {
-      hint.textContent = `⚠️ Există deja un raport pentru acest departament (salvat la ${srv.saved_at}). Îl poți modifica și salva din nou.`;
-      hint.style.display = 'block';
-    }
-  } else {
-    const hint = document.getElementById('prefillHint');
-    if (hint) hint.style.display = 'none';
-  }
-}
-
-document.querySelectorAll('input[name="dept"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    saveCurrentFields();
-    loadFields(radio.value);
-    prevDept = radio.value;
-  });
-});
-
-function validate() {
-  let ok = true;
-  const dept = document.querySelector('input[name="dept"]:checked');
-  document.getElementById('deptErr').classList.toggle('show', !dept);
-  if (!dept) ok = false;
-  const name = document.getElementById('pname').value.trim();
-  document.getElementById('nameFg').classList.toggle('err', !name);
-  if (!name) ok = false;
-  const done = document.getElementById('done').value.trim();
-  document.getElementById('doneFg').classList.toggle('err', !done);
-  if (!done) ok = false;
-  return ok;
-}
-
-document.getElementById('form').addEventListener('submit', async e => {
-  e.preventDefault();
-  if (!validate()) return;
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Se salvează…`;
-
-  const dept = document.querySelector('input[name="dept"]:checked').value;
-  const dstr = document.getElementById('rdate').value;
-
-  const params = new URLSearchParams({
-    department: dept,
-    name:       document.getElementById('pname').value.trim(),
-    tasks_done: document.getElementById('done').value.trim(),
-    blocaje:    document.getElementById('inprog').value.trim(),
-  });
-
-  try {
-    await fetch(APPS_SCRIPT_URL, { method: 'POST', body: params, mode: 'no-cors' });
-
-    document.getElementById('successMsg').innerHTML =
-      `Raportul <strong>${DEPT_LABELS[dept] || dept}</strong> pentru <strong>${fmtDate(dstr)}</strong> a fost salvat. La 19:00 se trimite automat email-ul combinat.`;
-
-    document.getElementById('form').style.display = 'none';
-    document.getElementById('successPane').classList.add('show');
-    loadTodayStatus();
-
+    var dept   = e.parameter.department;
+    var name   = e.parameter.name;
+    var tasks  = e.parameter.tasks_done;
+    var block  = e.parameter.blocaje || '';
+    saveData(dept, name, tasks, block);
+    return json({success: true});
   } catch(err) {
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Salvează raportul`;
-    alert('Eroare la salvare. Verificați conexiunea și încercați din nou.');
+    return json({success: false, error: err.message});
   }
-});
-
-function resetForm() {
-  document.getElementById('form').reset();
-  document.getElementById('rdate').value =
-    `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-  document.getElementById('form').style.display = 'block';
-  document.getElementById('successPane').classList.remove('show');
-  document.querySelectorAll('.err').forEach(el => el.classList.remove('err'));
-  document.getElementById('deptErr').classList.remove('show');
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = false;
-  btn.innerHTML = `<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Salvează raportul`;
 }
-</script>
 
-</body>
-</html>
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'save') {
+    try {
+      var dept  = e.parameter.department;
+      var name  = e.parameter.name;
+      var tasks = e.parameter.tasks_done;
+      var block = e.parameter.blocaje || '';
+      saveData(dept, name, tasks, block);
+      return jsonCors({success: true});
+    } catch(err) {
+      return jsonCors({success: false, error: err.message});
+    }
+  }
+  return jsonCors(getTodayData(getToday()));
+}
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonCors(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ---------- Stocare ----------
+
+function getSheet() {
+  var props = PropertiesService.getScriptProperties();
+  var id    = props.getProperty('SS_ID');
+  var ss;
+  if (id) {
+    ss = SpreadsheetApp.openById(id);
+  } else {
+    ss = SpreadsheetApp.create('PRIMA — Rapoarte Zilnice');
+    props.setProperty('SS_ID', ss.getId());
+    var sh = ss.getActiveSheet().setName(SHEET_NAME);
+    sh.appendRow(['Data','Departament','Nume','Realizat azi','Blocaje','Ora salvarii']);
+    sh.setFrozenRows(1);
+  }
+  return ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+}
+
+function getToday() {
+  return Utilities.formatDate(new Date(), 'Europe/Bucharest', 'yyyy-MM-dd');
+}
+
+function saveData(dept, name, tasks, block) {
+  var sh    = getSheet();
+  var today = getToday();
+  var vals  = sh.getDataRange().getValues();
+  var ora   = Utilities.formatDate(new Date(), 'Europe/Bucharest', 'HH:mm');
+
+  for (var i = 1; i < vals.length; i++) {
+    if (String(vals[i][0]) === today && vals[i][1] === dept) {
+      sh.getRange(i+1, 1, 1, 6).setValues([[today, dept, name, tasks, block, ora]]);
+      return;
+    }
+  }
+  sh.appendRow([today, dept, name, tasks, block, ora]);
+}
+
+function getTodayData(today) {
+  var sh   = getSheet();
+  var vals = sh.getDataRange().getValues();
+  var res  = {};
+  for (var i = 1; i < vals.length; i++) {
+    if (String(vals[i][0]) === today) {
+      res[vals[i][1]] = {
+        name: vals[i][2], tasks_done: vals[i][3],
+        blocaje: vals[i][4], saved_at: vals[i][5]
+      };
+    }
+  }
+  return res;
+}
+
+// ---------- Email zilnic ----------
+
+function sendDailyReport() {
+  var today = getToday();
+  var data  = getTodayData(today);
+  if (!Object.keys(data).length) return;
+
+  var dateFmt = Utilities.formatDate(new Date(), 'Europe/Bucharest', 'dd MMMM yyyy');
+
+  var depts = [
+    {key:'Tehnic',        icon:'🏗️', color:'#1a3c2e', bg:'#f0f7f4', border:'#2d6a4f'},
+    {key:'Operational',   icon:'⚙️', color:'#1a3c6e', bg:'#eaf2ff', border:'#1a5276'},
+    {key:'Contabilitate', icon:'📊', color:'#5c2200', bg:'#fff8f0', border:'#6e2c00'}
+  ];
+
+  var sections = depts.map(function(d) {
+    var info = data[d.key];
+    if (!info) return (
+      '<div style="background:#f5f5f5;border-radius:8px;padding:16px;margin-bottom:14px;border:1px dashed #ccc">'+
+        '<span style="font-size:18px">'+d.icon+'</span> '+
+        '<span style="color:#aaa;font-size:14px">'+d.key+' — necompletat</span>'+
+      '</div>');
+    return (
+      '<div style="background:#fff;border-radius:8px;padding:20px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07)">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+          '<div style="font-size:18px;font-weight:bold;color:#222">'+d.icon+' '+d.key+'</div>'+
+          '<span style="background:'+d.color+';color:#fff;font-size:11px;padding:3px 10px;border-radius:12px">'+d.key+'</span>'+
+        '</div>'+
+        '<p style="margin:0 0 2px;color:#999;font-size:11px;letter-spacing:1px">COMPLETAT DE</p>'+
+        '<p style="margin:0 0 14px;font-weight:bold;font-size:15px;color:#333">'+info.name+'</p>'+
+        '<div style="background:'+d.bg+';border-left:3px solid '+d.border+';padding:12px;border-radius:0 6px 6px 0;margin-bottom:'+(info.blocaje?'10px':'0')+'">'+
+          '<p style="margin:0 0 5px;font-weight:bold;color:'+d.border+';font-size:12px">✅ Realizat azi</p>'+
+          '<p style="margin:0;color:#333;line-height:1.6">'+String(info.tasks_done).replace(/\n/g,'<br>')+'</p>'+
+        '</div>'+
+        (info.blocaje?
+          '<div style="background:#fff8f0;border-left:3px solid #e67e22;padding:12px;border-radius:0 6px 6px 0">'+
+            '<p style="margin:0 0 5px;font-weight:bold;color:#b7600a;font-size:12px">⚠️ Blocaje / Ce am nevoie</p>'+
+            '<p style="margin:0;color:#333;line-height:1.6">'+String(info.blocaje).replace(/\n/g,'<br>')+'</p>'+
+          '</div>':'')+
+      '</div>');
+  }).join('');
+
+  var html =
+    '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0ede8;font-family:Georgia,serif">'+
+    '<div style="max-width:600px;margin:0 auto;padding:24px 16px">'+
+      '<div style="background:#1a3c2e;border-radius:12px 12px 0 0;padding:24px 28px">'+
+        '<div style="font-size:24px;font-weight:bold;color:#fff;letter-spacing:1px">PRIMA<span style="color:#c9a227">.</span></div>'+
+        '<div style="color:#7aab8a;font-size:10px;letter-spacing:3px">DEVELOPMENT GROUP</div>'+
+      '</div>'+
+      '<div style="background:#c9a227;padding:12px 28px">'+
+        '<span style="color:#fff;font-weight:bold">📋 Raport zilnic intern · '+dateFmt+'</span>'+
+      '</div>'+
+      '<div style="background:#f9f9f9;padding:20px 16px">'+sections+'</div>'+
+      '<div style="background:#e8e5e0;padding:12px 28px;border-radius:0 0 12px 12px;text-align:center">'+
+        '<span style="color:#999;font-size:11px">Trimis automat · platforma internă PRIMA · '+
+        Utilities.formatDate(new Date(),'Europe/Bucharest','dd.MM.yyyy, HH:mm')+'</span>'+
+      '</div>'+
+    '</div></body></html>';
+
+  GmailApp.sendEmail(
+    OWNER_EMAIL,
+    '📋 Raport zilnic PRIMA — ' + dateFmt,
+    'Raportul zilnic PRIMA este disponibil mai jos.',
+    {htmlBody: html, name: 'PRIMA Rapoarte'}
+  );
+}
+
+// ---------- Configurare trigger (rulați O SINGURĂ DATĂ) ----------
+
+function setupTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'sendDailyReport') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('sendDailyReport')
+    .timeBased().atHour(19).nearMinute(0)
+    .inTimezone('Europe/Bucharest').everyDays(1).create();
+  Logger.log('✅ Trigger setat: email zilnic la 19:00');
+}
